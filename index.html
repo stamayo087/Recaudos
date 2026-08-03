@@ -1,0 +1,1806 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Cartera Vendedores</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{
+  --ink:#161A2B;
+  --ink-soft:#252B42;
+  --paper:#F6F5F2;
+  --paper-raised:#FFFFFF;
+  --line:#E3E0D8;
+  --text:#1D2030;
+  --text-soft:#63677A;
+  --accent:#B23A6B;
+  --accent-soft:#F3DCE6;
+  --accent-ink:#7A2249;
+  --teal:#1F8A70;
+  --teal-soft:#DCEFE9;
+  --amber:#B4790F;
+  --amber-soft:#F6E7CC;
+  --red:#B93C33;
+  --red-soft:#F7DEDB;
+  --radius:14px;
+  --radius-sm:8px;
+  --shadow:0 1px 2px rgba(22,26,43,.06), 0 8px 24px -12px rgba(22,26,43,.18);
+  --font-display:'Sora',system-ui,sans-serif;
+  --font-body:'Inter',system-ui,sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,monospace;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--paper);
+  color:var(--text);
+  font-family:var(--font-body);
+  -webkit-font-smoothing:antialiased;
+  min-height:100vh;
+}
+#app{min-height:100vh;display:flex;flex-direction:column;}
+button{font-family:inherit;cursor:pointer;}
+input,select,textarea{font-family:inherit;font-size:15px;}
+a{color:inherit;}
+.mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums;letter-spacing:-0.01em;}
+::selection{background:var(--accent-soft);}
+
+/* ---------- Login ---------- */
+.login-wrap{
+  min-height:100vh;display:flex;align-items:center;justify-content:center;
+  background:
+    radial-gradient(1200px 600px at 15% -10%, rgba(178,58,107,.14), transparent 60%),
+    radial-gradient(900px 500px at 110% 10%, rgba(31,138,112,.12), transparent 55%),
+    var(--ink);
+  padding:24px;
+}
+.login-card{
+  width:100%;max-width:380px;background:var(--paper-raised);
+  border-radius:20px;padding:32px 28px;box-shadow:0 30px 60px -20px rgba(0,0,0,.5);
+}
+.login-brand{display:flex;align-items:center;gap:10px;margin-bottom:6px;}
+.login-brand .mark{
+  width:36px;height:36px;border-radius:10px;background:var(--accent);
+  display:flex;align-items:center;justify-content:center;color:#fff;font-family:var(--font-display);
+  font-weight:800;font-size:15px;flex:none;
+}
+.login-brand span{font-family:var(--font-display);font-weight:700;font-size:19px;color:var(--ink);}
+.login-sub{color:var(--text-soft);font-size:13.5px;margin:0 0 26px;line-height:1.5;}
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:12.5px;font-weight:600;color:var(--text-soft);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em;}
+.field input,.field select{
+  width:100%;padding:11px 13px;border:1.5px solid var(--line);border-radius:10px;
+  background:#fff;color:var(--text);outline:none;transition:border-color .15s;
+}
+.field input:focus,.field select:focus{border-color:var(--accent);}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  border:none;border-radius:10px;padding:11px 18px;font-weight:600;font-size:14.5px;
+  transition:transform .08s ease, filter .15s;
+}
+.btn:active{transform:scale(.97);}
+.btn-primary{background:var(--ink);color:#fff;width:100%;}
+.btn-primary:hover{filter:brightness(1.15);}
+.btn-accent{background:var(--accent);color:#fff;}
+.btn-accent:hover{filter:brightness(1.08);}
+.btn-ghost{background:transparent;color:var(--text-soft);border:1.5px solid var(--line);}
+.btn-ghost:hover{border-color:var(--ink);color:var(--ink);}
+.btn-sm{padding:7px 12px;font-size:13px;border-radius:8px;}
+.btn-danger{background:var(--red-soft);color:var(--red);}
+.btn:disabled{opacity:.45;cursor:not-allowed;}
+.login-error{background:var(--red-soft);color:var(--red);font-size:13px;padding:9px 12px;border-radius:8px;margin-bottom:14px;}
+.login-demo{margin-top:20px;padding-top:16px;border-top:1px dashed var(--line);font-size:12px;color:var(--text-soft);line-height:1.7;}
+.login-demo b{color:var(--text);}
+
+/* ---------- Shell layout ---------- */
+.shell{display:flex;min-height:100vh;width:100%;}
+.sidebar{
+  width:230px;flex:none;background:var(--ink);color:#fff;
+  display:none;flex-direction:column;padding:22px 16px;
+}
+.side-brand{display:flex;align-items:center;gap:10px;padding:0 6px 22px;}
+.side-brand .mark{width:32px;height:32px;border-radius:9px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:800;font-size:14px;flex:none;}
+.side-brand span{font-family:var(--font-display);font-weight:700;font-size:16px;}
+.side-nav{display:flex;flex-direction:column;gap:3px;flex:1;}
+.side-link{
+  display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:10px;
+  color:rgba(255,255,255,.68);font-size:14px;font-weight:500;text-decoration:none;border:none;background:none;text-align:left;width:100%;
+}
+.side-link svg{flex:none;opacity:.85;}
+.side-link.active{background:rgba(255,255,255,.1);color:#fff;}
+.side-link:hover{color:#fff;}
+.side-foot{padding-top:14px;border-top:1px solid rgba(255,255,255,.12);}
+
+.main{flex:1;min-width:0;display:flex;flex-direction:column;}
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:14px 18px;background:var(--paper-raised);border-bottom:1px solid var(--line);
+  position:sticky;top:0;z-index:20;
+}
+.topbar-title{font-family:var(--font-display);font-weight:700;font-size:17px;color:var(--ink);}
+.topbar-title small{display:block;font-family:var(--font-body);font-weight:500;font-size:12px;color:var(--text-soft);margin-top:1px;}
+.user-chip{display:flex;align-items:center;gap:9px;position:relative;}
+.user-chip .av{width:32px;height:32px;border-radius:50%;background:var(--accent-soft);color:var(--accent-ink);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;font-family:var(--font-display);}
+.user-chip button{background:none;border:none;display:flex;align-items:center;gap:8px;color:var(--text);}
+.user-menu{
+  position:absolute;top:44px;right:0;background:#fff;border:1px solid var(--line);border-radius:12px;
+  box-shadow:var(--shadow);min-width:190px;padding:6px;display:none;z-index:30;
+}
+.user-menu.open{display:block;}
+.user-menu button{width:100%;text-align:left;background:none;border:none;padding:9px 10px;border-radius:8px;font-size:13.5px;color:var(--text);display:flex;align-items:center;gap:8px;}
+.user-menu button:hover{background:var(--paper);}
+.user-menu .role{font-size:11px;color:var(--text-soft);padding:4px 10px 8px;border-bottom:1px solid var(--line);margin-bottom:4px;}
+
+.content{flex:1;padding:16px 16px 90px;max-width:1100px;width:100%;margin:0 auto;}
+@media(min-width:900px){
+  .sidebar{display:flex;}
+  .content{padding:26px 32px 48px;}
+  .bottom-nav{display:none !important;}
+}
+
+.corte-pill{
+  display:inline-flex;align-items:center;gap:7px;background:var(--teal-soft);color:var(--teal);
+  font-size:12px;font-weight:600;padding:5px 11px;border-radius:999px;margin-bottom:16px;
+}
+.corte-pill .dot{width:6px;height:6px;border-radius:50%;background:var(--teal);}
+
+.bottom-nav{
+  position:fixed;bottom:0;left:0;right:0;background:var(--paper-raised);border-top:1px solid var(--line);
+  display:flex;z-index:25;padding:6px 4px calc(6px + env(safe-area-inset-bottom));
+}
+.bn-item{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 2px;
+  background:none;border:none;color:var(--text-soft);font-size:10.5px;font-weight:600;border-radius:10px;
+}
+.bn-item.active{color:var(--accent);}
+.bn-item svg{width:21px;height:21px;}
+
+h1.page-title{font-family:var(--font-display);font-size:21px;font-weight:700;margin:0 0 4px;color:var(--ink);}
+p.page-sub{color:var(--text-soft);font-size:13.5px;margin:0 0 18px;}
+
+.kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;}
+@media(min-width:640px){.kpi-grid{grid-template-columns:repeat(4,1fr);}}
+.kpi-card{
+  background:var(--paper-raised);border:1px solid var(--line);border-radius:var(--radius);
+  padding:16px 16px;box-shadow:var(--shadow);
+}
+.kpi-card .lbl{font-size:11.5px;color:var(--text-soft);font-weight:600;text-transform:uppercase;letter-spacing:.03em;margin-bottom:8px;}
+.kpi-card .val{font-family:var(--font-mono);font-size:20px;font-weight:600;color:var(--ink);}
+.kpi-card .val.accent{color:var(--accent-ink);}
+.kpi-card .val.teal{color:var(--teal);}
+.kpi-card .val.amber{color:var(--amber);}
+.kpi-card .sub{font-size:11.5px;color:var(--text-soft);margin-top:4px;}
+
+.card{background:var(--paper-raised);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);}
+.card-pad{padding:18px;}
+.section-title{font-family:var(--font-display);font-weight:700;font-size:15px;color:var(--ink);margin:0 0 12px;display:flex;align-items:center;justify-content:space-between;gap:10px;}
+
+.search-row{display:flex;gap:8px;margin-bottom:14px;}
+.search-row input{flex:1;padding:10px 13px;border:1.5px solid var(--line);border-radius:10px;background:#fff;outline:none;}
+.search-row input:focus{border-color:var(--accent);}
+.search-row select{padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;background:#fff;}
+
+.client-list{display:flex;flex-direction:column;gap:9px;}
+.client-card{
+  background:var(--paper-raised);border:1px solid var(--line);border-radius:12px;padding:13px 14px;
+  display:flex;align-items:center;justify-content:space-between;gap:10px;border-left:4px solid var(--line);
+}
+.client-card.has-pend{border-left-color:var(--amber);}
+.client-card.al-dia{border-left-color:var(--teal);}
+.client-card:hover{border-color:#cfcabf;}
+.client-card button.row-btn{background:none;border:none;text-align:left;width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0;}
+.client-name{font-weight:600;font-size:14px;color:var(--text);margin-bottom:2px;}
+.client-meta{font-size:12px;color:var(--text-soft);}
+.client-amt{text-align:right;flex:none;}
+.client-amt .saldo{font-family:var(--font-mono);font-weight:600;font-size:15px;color:var(--ink);}
+.client-amt .pend{font-size:11px;color:var(--amber);font-weight:600;margin-top:2px;}
+.client-amt .paid{font-size:11px;color:var(--teal);font-weight:600;margin-top:2px;}
+
+.cliente-subtotal{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:10px 4px;border-bottom:2px solid var(--ink);margin-bottom:2px;
+}
+.cliente-subtotal .client-name{font-size:14.5px;}
+
+.badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;text-transform:uppercase;letter-spacing:.02em;}
+.badge-amber{background:var(--amber-soft);color:var(--amber);}
+.badge-teal{background:var(--teal-soft);color:var(--teal);}
+.badge-red{background:var(--red-soft);color:var(--red);}
+.badge-ink{background:#EAE9E5;color:var(--ink-soft);}
+
+/* Modal */
+.modal-backdrop{
+  position:fixed;inset:0;background:rgba(22,26,43,.5);display:flex;align-items:flex-end;justify-content:center;
+  z-index:100;padding:0;
+}
+.modal{
+  background:var(--paper-raised);width:100%;max-width:520px;border-radius:18px 18px 0 0;
+  padding:20px 20px calc(20px + env(safe-area-inset-bottom));max-height:92vh;overflow-y:auto;
+  box-shadow:0 -10px 40px rgba(0,0,0,.25);
+}
+@media(min-width:640px){
+  .modal-backdrop{align-items:center;}
+  .modal{border-radius:18px;max-height:88vh;}
+}
+.modal-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;gap:10px;}
+.modal-head h3{font-family:var(--font-display);font-size:17px;margin:0;color:var(--ink);}
+.modal-head p{margin:3px 0 0;color:var(--text-soft);font-size:12.5px;}
+.modal-close{background:var(--paper);border:none;width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--text-soft);flex:none;}
+.form-row{display:flex;gap:10px;}
+.form-row .field{flex:1;}
+
+.recibo-row{
+  display:flex;align-items:center;gap:11px;padding:11px 12px;border:1.5px solid var(--line);border-radius:11px;margin-bottom:8px;
+}
+.recibo-row input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent);flex:none;}
+.recibo-row.selectable{cursor:pointer;transition:border-color .12s, background .12s;-webkit-tap-highlight-color:transparent;}
+.recibo-row.selectable:hover{border-color:#cfcabf;}
+.recibo-row.selectable.selected{border-color:var(--accent);background:var(--accent-soft);}
+.recibo-row .check-dot{width:20px;height:20px;border-radius:50%;border:2px solid var(--line);flex:none;display:flex;align-items:center;justify-content:center;color:#fff;transition:all .12s;}
+.recibo-row.selected .check-dot{background:var(--accent);border-color:var(--accent);}
+.recibo-row .check-dot svg{width:12px;height:12px;}
+
+.selection-bar{
+  position:sticky;top:60px;z-index:5;display:flex;align-items:center;justify-content:space-between;gap:12px;
+  background:var(--ink);color:#fff;border-radius:12px;padding:12px 14px;margin-bottom:14px;box-shadow:var(--shadow);
+}
+.selection-bar .info{display:flex;flex-direction:column;}
+.selection-bar .count{font-size:11.5px;color:rgba(255,255,255,.65);}
+.selection-bar .sum{font-family:var(--font-mono);font-size:17px;font-weight:600;}
+.selection-bar .actions{display:flex;align-items:center;gap:8px;}
+.selection-bar .clear-btn{background:none;border:none;color:rgba(255,255,255,.6);font-size:12px;text-decoration:underline;padding:4px;}
+.recibo-row .info{flex:1;min-width:0;}
+.recibo-row .info .cli{font-weight:600;font-size:13.5px;}
+.recibo-row .info .meta{font-size:11.5px;color:var(--text-soft);}
+.recibo-row .amt{font-family:var(--font-mono);font-weight:600;font-size:14px;flex:none;}
+
+.sum-bar{
+  display:flex;align-items:center;justify-content:space-between;background:var(--ink);color:#fff;
+  border-radius:12px;padding:13px 16px;margin:14px 0;
+}
+.sum-bar .lbl{font-size:12px;color:rgba(255,255,255,.65);}
+.sum-bar .val{font-family:var(--font-mono);font-size:19px;font-weight:600;}
+.match-ok{color:#8FE3C5;}
+.match-bad{color:#F3A79E;}
+
+table.data-table{width:100%;border-collapse:collapse;font-size:13px;}
+table.data-table th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.03em;color:var(--text-soft);font-weight:700;padding:9px 10px;border-bottom:2px solid var(--line);white-space:nowrap;}
+table.data-table td{padding:10px 10px;border-bottom:1px solid var(--line);vertical-align:middle;}
+table.data-table tr:last-child td{border-bottom:none;}
+table.data-table tr.clickable-row{cursor:pointer;}
+table.data-table tr.clickable-row:hover td{background:var(--paper);}
+.table-wrap{overflow-x:auto;border-radius:var(--radius);border:1px solid var(--line);background:var(--paper-raised);box-shadow:var(--shadow);}
+.table-wrap table{box-shadow:none;border:none;}
+
+.empty-state{text-align:center;padding:50px 20px;color:var(--text-soft);}
+.empty-state .ic{font-size:34px;margin-bottom:10px;}
+.empty-state p{font-size:13.5px;margin:0 auto;max-width:280px;}
+
+.toast{
+  position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;
+  padding:11px 18px;border-radius:10px;font-size:13.5px;box-shadow:0 10px 30px rgba(0,0,0,.3);z-index:200;
+  display:flex;align-items:center;gap:8px;max-width:90vw;
+}
+@media(min-width:900px){.toast{bottom:26px;}}
+.toast.err{background:var(--red);}
+.toast.ok{background:var(--teal);}
+
+.tabs{display:flex;gap:4px;background:var(--paper);border:1px solid var(--line);border-radius:11px;padding:4px;margin-bottom:16px;overflow-x:auto;}
+.tab-btn{flex:1;white-space:nowrap;padding:8px 14px;border-radius:8px;border:none;background:none;font-size:13px;font-weight:600;color:var(--text-soft);}
+.tab-btn.active{background:var(--paper-raised);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08);}
+
+.upload-box{
+  border:2px dashed var(--line);border-radius:14px;padding:30px 18px;text-align:center;color:var(--text-soft);
+  font-size:13.5px;cursor:pointer;background:#fff;
+}
+.upload-box:hover{border-color:var(--accent);color:var(--accent-ink);}
+.upload-box input{display:none;}
+
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.bar-row .name{width:140px;flex:none;font-size:12.5px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bar-row .track{flex:1;height:9px;background:var(--paper);border-radius:5px;overflow:hidden;}
+.bar-row .fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent-ink));border-radius:5px;}
+.bar-row .amt{width:auto;flex:none;font-family:var(--font-mono);font-size:12px;color:var(--text-soft);}
+
+.divider{height:1px;background:var(--line);margin:16px 0;}
+.hint{font-size:12px;color:var(--text-soft);line-height:1.5;}
+.flex-between{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.stack-gap{display:flex;flex-direction:column;gap:10px;}
+.text-right{text-align:right;}
+.link-btn{background:none;border:none;color:var(--accent);font-weight:600;font-size:13px;padding:0;}
+.icon-btn{background:var(--paper);border:1px solid var(--line);border-radius:8px;width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;color:var(--text-soft);}
+.icon-btn:hover{color:var(--ink);border-color:var(--ink);}
+
+.img-preview-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px;}
+.img-preview{position:relative;display:block;aspect-ratio:1;border-radius:10px;overflow:hidden;border:1px solid var(--line);background:var(--paper);}
+.img-preview img{width:100%;height:100%;object-fit:cover;display:block;}
+.img-remove{position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:50%;background:rgba(22,26,43,.75);color:#fff;border:none;display:flex;align-items:center;justify-content:center;padding:0;}
+.img-remove svg{width:13px;height:13px;}
+
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+/* ================= CONFIG ================= */
+const SHEET_ID_HINT = '1bP2tKDjZ4jceBQQbcHhvAhvETlcc3_XUxnuHoTus-f4';
+const DEFAULT_API_URL = 'https://script.google.com/macros/s/AKfycbzn1hiH9ate8mJFYjEvqXsrBLUF2C-m30tCia708dsN6OEAdz1r0G839NnuNVkcC2c/exec';
+const K_API_URL = 'sheet_api_url'; // shared window.storage key holding the deployed Apps Script Web App URL
+
+const AppState = {
+  apiUrl: null, connected: false, connError: null,
+  users: [], cortes: [], pagos: [], consignaciones: [],
+  saldos: [], currentCorteId: null,
+  currentUser: null, view: 'inicio', modal: null, toast: null, userMenuOpen:false,
+  filters: { clienteQ:'', reporteVendedor:'', reportePagosEstado:'', pagosEstado:'', consigTab:'hoy' },
+  selectedRecibos: new Set(),
+  consigImages: [],
+  loading: false,
+};
+if(typeof window !== 'undefined') window.AppState = AppState;
+
+/* ================= LOCAL CONFIG STORAGE (only for the API URL) ================= */
+async function sGet(key, shared){
+  try{
+    const r = await window.storage.get(key, shared);
+    return r ? JSON.parse(r.value) : null;
+  }catch(e){ return null; }
+}
+async function sSet(key, value, shared){
+  try{ await window.storage.set(key, JSON.stringify(value), shared); }catch(e){ console.error('storage set failed', key, e); }
+}
+
+/* ================= GOOGLE SHEETS API CLIENT ================= */
+async function apiGet(action, params){
+  if(!AppState.apiUrl) throw new Error('sin-conexion');
+  const qs = new URLSearchParams({action, ...(params||{})}).toString();
+  const res = await fetch(AppState.apiUrl + '?' + qs, {method:'GET'});
+  const data = await res.json();
+  if(!data.ok) throw new Error(data.error||'error-api');
+  return data;
+}
+async function apiPost(action, payload){
+  if(!AppState.apiUrl) throw new Error('sin-conexion');
+  // text/plain avoids a CORS preflight against Apps Script web apps
+  const res = await fetch(AppState.apiUrl, {
+    method:'POST',
+    headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body: JSON.stringify({action, ...(payload||{})})
+  });
+  const data = await res.json();
+  if(!data.ok) throw new Error(data.error||'error-api');
+  return data;
+}
+
+async function testConnection(url){
+  const res = await fetch(url + '?action=ping');
+  const data = await res.json();
+  return !!data.ok;
+}
+
+async function connectSheet(url){
+  AppState.apiUrl = url.trim();
+  await sSet(K_API_URL, AppState.apiUrl, true);
+  await refreshBootstrap();
+  AppState.connected = true;
+  AppState.connError = null;
+}
+
+async function refreshBootstrap(){
+  const data = await apiGet('bootstrap');
+  AppState.users = (data.usuarios||[]).map(u=>({...u, activo: u.activo===true || u.activo==='true' || u.activo===1 || u.activo==='TRUE'}));
+  AppState.cortes = data.cortes||[];
+  AppState.pagos = (data.pagos||[]).map(p=>({...p, consignacionId: p.consignacionId || null}));
+  AppState.consignaciones = data.consignaciones||[];
+  AppState.currentCorteId = data.latestCorteId||null;
+  AppState.saldos = data.saldos||[];
+}
+
+async function loadSaldosForCorte(corteId){
+  if(corteId===AppState.currentCorteId && AppState.saldos.length) return AppState.saldos;
+  const data = await apiGet('saldosByCorte', {corteId});
+  AppState.currentCorteId = corteId;
+  AppState.saldos = data.saldos||[];
+  return AppState.saldos;
+}
+
+async function persistUsers(){ /* no-op: writes go through apiPost per-action now */ }
+async function persistCortes(){ /* no-op */ }
+async function persistPagos(){ /* no-op */ }
+async function persistConsig(){ /* no-op */ }
+
+/* ================= UTILS ================= */
+function uid(prefix){
+  const rnd = (crypto && crypto.randomUUID) ? crypto.randomUUID().slice(0,8) : Math.random().toString(36).slice(2,10);
+  return (prefix?prefix+'-':'')+Date.now().toString(36)+'-'+rnd;
+}
+function fmtCOP(n){
+  n = Number(n)||0;
+  return '$ '+Math.round(n).toLocaleString('es-CO');
+}
+function fmtCOPFull(n){
+  n = Number(n)||0;
+  return '$ '+n.toLocaleString('es-CO',{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+function fmtDate(d){
+  if(!d) return '—';
+  try{
+    const dt = new Date(String(d).slice(0,10)+'T00:00:00');
+    if(isNaN(dt)) return d;
+    return dt.toLocaleDateString('es-CO',{day:'2-digit',month:'short',year:'numeric'});
+  }catch(e){ return d; }
+}
+function todayISO(){
+  const d = new Date();
+  const off = d.getTimezoneOffset();
+  const local = new Date(d.getTime()-off*60000);
+  return local.toISOString().slice(0,10);
+}
+function esc(s){
+  return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function initials(name){
+  if(!name) return '?';
+  const p = name.trim().split(/\s+/);
+  return ((p[0]||'')[0]+(p[1]||'')[0]).toUpperCase();
+}
+function showToast(msg, kind){
+  AppState.toast = {msg, kind: kind||'ok'};
+  render();
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(()=>{ AppState.toast=null; render(); }, 3200);
+}
+
+/* ================= EXCEL PARSING (nuevo corte) ================= */
+// Cada factura/movimiento (columna "Documento" del archivo, ej. "FV FV 29321")
+// se guarda como su propio registro, en vez de solo el total agregado del cliente.
+function parseCorteRows(rows){
+  const records = [];
+  let curVendedor = null, curCliente = null, curTipoDoc = null, curDocCliente = null, curSucursal = '';
+  const isClienteLine = (a)=> typeof a==='string' && (a.includes(' - CC:') || a.includes(' - NIT:'));
+  const SKIP_EXACT = new Set(['Total Cuentas Por Cobrar','Cuentas Por Cobrar','Gran Total']);
+  for(let i=1;i<rows.length;i++){
+    const row = rows[i] || [];
+    const a = row[0];
+    if(a===undefined || a===null || a==='' || typeof a!=='string') continue;
+    if(a.startsWith('Total Vendedor:') || a.startsWith('Total Tercero:') || a.startsWith('Total Sucursal:')) continue;
+    if(SKIP_EXACT.has(a)) continue;
+    if(a.startsWith('Sucursal:')){
+      curSucursal = a.replace('Sucursal:','').replace(/\s*-\s*Ciudad:.*$/,'').trim();
+      continue;
+    }
+    const rest = row.slice(1,6);
+    const restEmpty = rest.every(v=>v===undefined||v===null||v==='');
+    if(restEmpty){
+      if(isClienteLine(a)){
+        const m = a.match(/^(.*?)\s*-\s*(CC|NIT):\s*(.*)$/);
+        if(m){ curCliente = m[1].trim(); curTipoDoc = m[2]; curDocCliente = m[3].trim(); }
+      } else {
+        curVendedor = a.trim();
+      }
+      continue;
+    }
+    // Solo una fila con fecha real (contiene "/") es una factura/movimiento válido.
+    // Esto evita que la fila "Gran Total" (u otro renglón inesperado) se cuele como dato.
+    if(a.includes('/') && curCliente && curVendedor){
+      let saldo = row[5];
+      saldo = (typeof saldo==='number') ? Math.round(saldo*100)/100 : (parseFloat(saldo)||0);
+      records.push({
+        vendedor: curVendedor, cliente: curCliente, tipoDoc: curTipoDoc, docCliente: curDocCliente,
+        sucursal: curSucursal, documento: row[1], fecha: a, vencimiento: row[2], concepto: row[4], saldo
+      });
+    }
+  }
+  return records;
+}
+
+
+
+/* ================= SELECTORS ================= */
+function getLatestCorte(){
+  if(!AppState.cortes || !AppState.cortes.length) return null;
+  return [...AppState.cortes].sort((a,b)=> String(b.uploadedAt||'').localeCompare(String(a.uploadedAt||'')))[0];
+}
+function getCurrentCorte(){
+  return AppState.cortes.find(c=>c.id===AppState.currentCorteId) || getLatestCorte();
+}
+
+// Clave única por FACTURA/MOVIMIENTO individual (lo que el archivo llama "Documento", ej. "FV FV 29321")
+function documentoKey(r){ return r.vendedor+'|'+r.cliente+'|'+r.docCliente+'|'+r.documento+'|'+r.fecha; }
+// Clave única por CLIENTE (agrupa todas sus facturas)
+function clienteKey(r){ return r.vendedor+'|'+r.cliente+'|'+r.docCliente; }
+
+function pagosDe(vendedorName, corteId, cliente, documento){
+  return AppState.pagos.filter(p=> p.vendedor===vendedorName
+    && (corteId===undefined || p.corteId===corteId)
+    && (cliente===undefined || p.cliente===cliente)
+    && (documento===undefined || p.documento===documento));
+}
+function sumMonto(list){ return list.reduce((s,p)=>s+ (Number(p.monto)||0), 0); }
+
+// Todas las facturas/movimientos abiertos de un vendedor, con pagado/pendiente ya calculado.
+function documentRowsForVendor(vendedorName){
+  const records = AppState.saldos || [];
+  return records.filter(r=>r.vendedor===vendedorName).map(r=>{
+    const pagos = pagosDe(vendedorName, AppState.currentCorteId, r.cliente, r.documento);
+    const pagado = sumMonto(pagos);
+    const saldoNum = Number(r.saldo)||0;
+    const pendiente = Math.max(0, Math.round((saldoNum - pagado)*100)/100);
+    return {...r, saldo: saldoNum, key: documentoKey(r), clienteKey: clienteKey(r), pagosCount: pagos.length, pagado, pendiente};
+  });
+}
+
+// Facturas agrupadas por cliente (lo que se ve en la lista principal de clientes).
+function clientSummaryForVendor(vendedorName){
+  const docs = documentRowsForVendor(vendedorName);
+  const map = new Map();
+  docs.forEach(d=>{
+    if(!map.has(d.clienteKey)){
+      map.set(d.clienteKey, {
+        clienteKey: d.clienteKey, cliente: d.cliente, tipoDoc: d.tipoDoc, docCliente: d.docCliente,
+        sucursales: new Set(), saldo:0, pagado:0, pendiente:0, documentos: []
+      });
+    }
+    const g = map.get(d.clienteKey);
+    if(d.sucursal) g.sucursales.add(d.sucursal);
+    g.saldo += d.saldo; g.pagado += d.pagado; g.pendiente += d.pendiente;
+    g.documentos.push(d);
+  });
+  return [...map.values()].map(g=>({
+    ...g,
+    saldo: Math.round(g.saldo*100)/100, pagado: Math.round(g.pagado*100)/100, pendiente: Math.round(g.pendiente*100)/100,
+    sucursal: [...g.sucursales].join(', '),
+    documentos: g.documentos.sort((a,b)=> String(b.fecha).localeCompare(String(a.fecha)))
+  }));
+}
+
+function findClienteGroup(vendedorName, clienteKeyVal){
+  return clientSummaryForVendor(vendedorName).find(g=>g.clienteKey===clienteKeyVal);
+}
+function findDocumento(vendedorName, key){
+  return documentRowsForVendor(vendedorName).find(d=>d.key===key);
+}
+
+function vendorTotals(vendedorName){
+  if(!AppState.currentCorteId) return {saldoTotal:0, pagado:0, pendiente:0, porConsignar:0, consignado:0, clientes:0};
+  const rows = clientSummaryForVendor(vendedorName);
+  const saldoTotal = rows.reduce((s,r)=>s+r.saldo,0);
+  const pagado = rows.reduce((s,r)=>s+r.pagado,0);
+  const pendiente = rows.reduce((s,r)=>s+r.pendiente,0);
+  const porConsignar = sumMonto(AppState.pagos.filter(p=>p.vendedor===vendedorName && !p.consignacionId));
+  const consignado = sumMonto(AppState.consignaciones.filter(c=>c.vendedor===vendedorName));
+  return {saldoTotal, pagado, pendiente, porConsignar, consignado, clientes: rows.length};
+}
+
+function allVendedorNames(){
+  const fromUsers = AppState.users.filter(u=>u.role==='vendedor').map(u=>u.vendedorName);
+  return [...new Set(fromUsers)];
+}
+
+// Fecha del corte al que pertenece un pago, útil para consultar recibos "huérfanos"
+// de un corte anterior (su factura ya no está en el corte vigente, pero el pago sigue intacto).
+function corteFechaFor(corteId){
+  const c = AppState.cortes.find(x=>x.id===corteId);
+  return c ? c.fecha : null;
+}
+function esCorteAnterior(corteId){
+  const latest = getLatestCorte();
+  return latest && corteId!==latest.id;
+}
+
+/* ================= AUTH ================= */
+function findUser(username, password){
+  return AppState.users.find(u=> String(u.username).toLowerCase()===String(username).trim().toLowerCase() && String(u.password)===String(password) && u.activo!==false);
+}
+async function doLogin(username, password){
+  const u = findUser(username, password);
+  if(!u){ return false; }
+  AppState.currentUser = u;
+  AppState.view = 'inicio';
+  const latest = getLatestCorte();
+  if(latest) await loadSaldosForCorte(latest.id);
+  await sSet('last_username', username, false);
+  return true;
+}
+function doLogout(){
+  AppState.currentUser = null;
+  AppState.view='inicio';
+  AppState.userMenuOpen=false;
+  render();
+}
+
+
+/* ================= ICONS ================= */
+function ic(path, extra){
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ${extra||''}>${path}</svg>`;
+}
+const ICONS = {
+  home: ic('<path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/>'),
+  users: ic('<circle cx="9" cy="8" r="3.2"/><path d="M2.5 20c0-3.5 2.9-6 6.5-6s6.5 2.5 6.5 6"/><path d="M16 8.2a3 3 0 010 5.8"/><path d="M21.5 20c-.2-2.6-1.8-4.6-4-5.5"/>'),
+  receipt: ic('<path d="M6 3h12v18l-3-2-3 2-3-2-3 2V3z"/><path d="M9 8h6M9 12h6"/>'),
+  bank: ic('<path d="M3 10l9-6 9 6"/><path d="M4 10v9h16v-9"/><path d="M9 14v3M12 14v3M15 14v3"/><path d="M2 21h20"/>'),
+  table: ic('<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 4v16"/>'),
+  upload: ic('<path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a2 2 0 002 2h12a2 2 0 002-2v-3"/>'),
+  logout: ic('<path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/>'),
+  key: ic('<circle cx="8" cy="15" r="4"/><path d="M10.5 12.5L20 3M17 6l3 3M14 9l2 2"/>'),
+  chev: ic('<path d="M9 18l6-6-6-6"/>'),
+  check: ic('<path d="M20 6L9 17l-5-5"/>'),
+  x: ic('<path d="M18 6L6 18M6 6l12 12"/>'),
+  plus: ic('<path d="M12 5v14M5 12h14"/>'),
+  search: ic('<circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/>'),
+  pencil: ic('<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/>'),
+  download: ic('<path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 21h16"/>'),
+  clock: ic('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>'),
+};
+
+/* ================= NAV DEFS ================= */
+function navFor(role){
+  if(role==='admin'){
+    return [
+      {v:'inicio', label:'Resumen', icon:ICONS.home},
+      {v:'vendedores', label:'Vendedores', icon:ICONS.users},
+      {v:'cortes', label:'Cortes', icon:ICONS.upload},
+      {v:'reporte', label:'Reporte', icon:ICONS.table},
+      {v:'consignaciones', label:'Bancos', icon:ICONS.bank},
+    ];
+  }
+  return [
+    {v:'inicio', label:'Inicio', icon:ICONS.home},
+    {v:'clientes', label:'Clientes', icon:ICONS.users},
+    {v:'pagos', label:'Recibos', icon:ICONS.receipt},
+    {v:'consignaciones', label:'Consignar', icon:ICONS.bank},
+  ];
+}
+
+/* ================= ROOT RENDER ================= */
+function render(){
+  const app = document.getElementById('app');
+  if(!AppState.connected){
+    app.innerHTML = renderConnect();
+    return;
+  }
+  if(!AppState.currentUser){
+    app.innerHTML = renderLogin();
+    sGet('last_username', false).then(v=>{ const el=document.getElementById('li-user'); if(v && el) el.value=v; }).catch(()=>{});
+    return;
+  }
+  const nav = navFor(AppState.currentUser.role);
+  const corte = getLatestCorte();
+  app.innerHTML = `
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="side-brand"><div class="mark">CV</div><span>Cartera Vendedores</span></div>
+      <nav class="side-nav">
+        ${nav.map(n=>`<button class="side-link ${AppState.view===n.v?'active':''}" data-action="nav" data-view="${n.v}">${n.icon}${n.label}</button>`).join('')}
+      </nav>
+      <div class="side-foot">
+        <button class="side-link" data-action="logout">${ICONS.logout} Cerrar sesión</button>
+      </div>
+    </aside>
+    <div class="main">
+      <header class="topbar">
+        <div class="topbar-title">${pageTitle(AppState.view, AppState.currentUser.role)}
+          <small>${corte ? 'Corte activo: '+fmtDate(corte.fecha) : 'Sin corte cargado'}</small>
+        </div>
+        <div class="user-chip">
+          <button data-action="toggle-user-menu">
+            <span class="av">${initials(AppState.currentUser.nombre)}</span>
+            ${ICONS.chev}
+          </button>
+          <div class="user-menu ${AppState.userMenuOpen?'open':''}">
+            <div class="role">${esc(AppState.currentUser.nombre)}<br>${AppState.currentUser.role==='admin'?'Administrador':'Vendedor(a)'}</div>
+            <button data-action="open-change-pw">${ICONS.key} Cambiar contraseña</button>
+            <button data-action="logout">${ICONS.logout} Cerrar sesión</button>
+          </div>
+        </div>
+      </header>
+      <main class="content" id="content"></main>
+    </div>
+  </div>
+  <nav class="bottom-nav">
+    ${nav.map(n=>`<button class="bn-item ${AppState.view===n.v?'active':''}" data-action="nav" data-view="${n.v}">${n.icon}<span>${n.label}</span></button>`).join('')}
+  </nav>
+  ${AppState.modal ? renderModal() : ''}
+  ${AppState.toast ? `<div class="toast ${AppState.toast.kind==='err'?'err':(AppState.toast.kind==='ok'?'ok':'')}">${AppState.toast.kind==='ok'?ICONS.check:(AppState.toast.kind==='err'?ICONS.x:'')} ${esc(AppState.toast.msg)}</div>` : ''}
+  `;
+  document.getElementById('content').innerHTML = renderContent();
+}
+
+function pageTitle(view, role){
+  const map = {
+    inicio:'Resumen', clientes:'Mis clientes', pagos:'Recibos de pago', consignaciones: role==='admin' ? 'Consignaciones' : 'Consignar en banco',
+    vendedores:'Vendedores', cortes:'Cortes de cartera', reporte:'Reporte detallado'
+  };
+  return map[view] || 'Cartera Vendedores';
+}
+
+
+/* ================= CONEXION A GOOGLE SHEETS ================= */
+let connectBusy = false;
+let connectErrorMsg = '';
+function renderConnect(){
+  return `
+  <div class="login-wrap">
+    <div class="login-card">
+      <div class="login-brand"><div class="mark">CV</div><span>Cartera Vendedores</span></div>
+      <p class="login-sub">Conecta esta app con la hoja de Google Sheets que funciona como base de datos.</p>
+      ${connectErrorMsg ? `<div class="login-error">${esc(connectErrorMsg)}</div>` : ''}
+      <form id="connect-form">
+        <div class="field">
+          <label>URL del Web App (Apps Script)</label>
+          <input type="text" id="connect-url" placeholder="https://script.google.com/macros/s/AKfycb.../exec" required>
+        </div>
+        <button class="btn btn-primary" type="submit" ${connectBusy?'disabled':''}>${connectBusy?'Conectando...':'Conectar'}</button>
+      </form>
+      <div class="login-demo">
+        <b>¿Primera vez?</b> Abre tu hoja de Google Sheets → Extensiones → Apps Script, pega el código <b>Code.gs</b> que te compartimos, corre la función <b>setup</b> una vez, y luego Deploy → New deployment → Web app (Execute as: Me, Access: Anyone). Pega aquí la URL que termina en <b>/exec</b>.<br><br>
+        Esta URL sólo se pide una vez: queda guardada para todos los que usen esta app.
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ================= LOGIN ================= */
+let loginError = '';
+function renderLogin(){
+  return `
+  <div class="login-wrap">
+    <div class="login-card">
+      <div class="login-brand"><div class="mark">CV</div><span>Cartera Vendedores</span></div>
+      <p class="login-sub">Consulta de saldos, recibos de pago y consignaciones bancarias por vendedor.</p>
+      ${loginError ? `<div class="login-error">${esc(loginError)}</div>` : ''}
+      <form id="login-form">
+        <div class="field">
+          <label>Usuario</label>
+          <input type="text" id="li-user" autocomplete="username" placeholder="ej: admin" required>
+        </div>
+        <div class="field">
+          <label>Contraseña</label>
+          <input type="password" id="li-pass" autocomplete="current-password" placeholder="••••••••" required>
+        </div>
+        <button class="btn btn-primary" type="submit">Ingresar</button>
+      </form>
+      <div class="login-demo">
+        <b>Administrador:</b> admin / admin123<br>
+        <b>Vendedor(a) ejemplo:</b> catalina.munoz / vendedor123<br>
+        Cada vendedor(a) tiene su propio usuario para ver solo su cartera.<br><br>
+        <button class="link-btn" data-action="reconfigure-sheet" type="button">¿Cambiar la hoja conectada?</button>
+      </div>
+    </div>
+  </div>`;
+}
+async function handleLoginSubmit(){
+  const u = document.getElementById('li-user').value;
+  const p = document.getElementById('li-pass').value;
+  const ok = await doLogin(u,p);
+  if(ok){ loginError=''; render(); }
+  else { loginError = 'Usuario o contraseña incorrectos.'; render(); }
+}
+
+
+/* ================= CONTENT DISPATCH ================= */
+function renderContent(){
+  const role = AppState.currentUser.role;
+  if(role==='vendedor'){
+    if(AppState.view==='inicio') return renderVendInicio();
+    if(AppState.view==='clientes') return renderVendClientes();
+    if(AppState.view==='pagos') return renderVendPagos();
+    if(AppState.view==='consignaciones') return renderVendConsignaciones();
+  } else {
+    if(AppState.view==='inicio') return renderAdminInicio();
+    if(AppState.view==='vendedores') return renderAdminVendedores();
+    if(AppState.view==='cortes') return renderAdminCortes();
+    if(AppState.view==='reporte') return renderAdminReporte();
+    if(AppState.view==='consignaciones') return renderAdminConsignaciones();
+  }
+  return '<div class="empty-state">Vista no encontrada.</div>';
+}
+
+function cortePillHtml(){
+  const c = getLatestCorte();
+  if(!c) return '';
+  return `<div class="corte-pill"><span class="dot"></span> Corte vigente: ${fmtDate(c.fecha)} · ${c.registros} facturas cargadas</div>`;
+}
+
+/* ================= VENDEDOR: INICIO ================= */
+function renderVendInicio(){
+  const u = AppState.currentUser;
+  const t = vendorTotals(u.vendedorName);
+  return `
+  ${cortePillHtml()}
+  <h1 class="page-title">Hola, ${esc(u.nombre.split(' ')[0])}</h1>
+  <p class="page-sub">Este es el estado de tu cartera según el corte vigente.</p>
+  <div class="kpi-grid">
+    <div class="kpi-card"><div class="lbl">Saldo cartera</div><div class="val mono">${fmtCOP(t.saldoTotal)}</div><div class="sub">${t.clientes} clientes</div></div>
+    <div class="kpi-card"><div class="lbl">Recibos pendientes</div><div class="val mono amber">${fmtCOP(t.porConsignar)}</div><div class="sub">por consignar en banco</div></div>
+    <div class="kpi-card"><div class="lbl">Consignado histórico</div><div class="val mono teal">${fmtCOP(t.consignado)}</div><div class="sub">total al banco</div></div>
+    <div class="kpi-card"><div class="lbl">Pendiente por cobrar</div><div class="val mono accent">${fmtCOP(t.pendiente)}</div><div class="sub">saldo - pagos registrados</div></div>
+  </div>
+  <div class="card card-pad">
+    <div class="section-title">Clientes con mayor saldo <button class="link-btn" data-action="nav" data-view="clientes">Ver todos ${ICONS.chev}</button></div>
+    <div class="client-list">
+      ${clientSummaryForVendor(u.vendedorName).sort((a,b)=>b.pendiente-a.pendiente).slice(0,5).map(g=>clientRowHtml(g)).join('') || emptyClientes()}
+    </div>
+  </div>`;
+}
+
+function emptyClientes(){
+  return `<div class="empty-state"><div class="ic">🗂️</div><p>Aún no tienes clientes asignados en el corte vigente.</p></div>`;
+}
+
+function clientRowHtml(g){
+  const cls = g.pendiente<=0.5 ? 'al-dia' : 'has-pend';
+  return `
+  <div class="client-card ${cls}">
+    <button class="row-btn" data-action="open-cliente" data-key="${esc(g.clienteKey)}">
+      <div>
+        <div class="client-name">${esc(g.cliente)}</div>
+        <div class="client-meta">${g.tipoDoc}: ${esc(g.docCliente)} · ${g.documentos.length} factura(s)${g.sucursal?' · '+esc(g.sucursal):''}</div>
+      </div>
+      <div class="client-amt">
+        <div class="saldo mono">${fmtCOP(g.saldo)}</div>
+        ${g.pendiente>0.5 ? `<div class="pend">Pend: ${fmtCOP(g.pendiente)}</div>` : `<div class="paid">Al día</div>`}
+      </div>
+    </button>
+  </div>`;
+}
+
+/* ================= VENDEDOR: CLIENTES ================= */
+function renderVendClientes(){
+  const u = AppState.currentUser;
+  const corte = getLatestCorte();
+  if(!corte) return cortePillHtml() + emptyClientes();
+  let grupos = clientSummaryForVendor(u.vendedorName);
+  const q = AppState.filters.clienteQ.toLowerCase();
+  if(q){
+    grupos = grupos.filter(g=>
+      g.cliente.toLowerCase().includes(q) ||
+      String(g.docCliente).toLowerCase().includes(q) ||
+      g.documentos.some(d=>String(d.documento).toLowerCase().includes(q))
+    );
+  }
+  grupos.sort((a,b)=> a.cliente.localeCompare(b.cliente, 'es', {sensitivity:'base'}));
+  return `
+  ${cortePillHtml()}
+  <h1 class="page-title">Mis clientes</h1>
+  <p class="page-sub">Facturas por cliente. Toca una factura para registrar el abono correspondiente.</p>
+  <div class="search-row">
+    <input type="text" placeholder="Buscar cliente o documento..." id="cliente-search" value="${esc(AppState.filters.clienteQ)}">
+  </div>
+  <div class="stack-gap" style="gap:20px;">
+    ${grupos.map(g=>clienteGrupoHtml(g)).join('') || `<div class="empty-state"><div class="ic">🔍</div><p>No se encontraron clientes con ese criterio.</p></div>`}
+  </div>`;
+}
+
+function clienteGrupoHtml(g){
+  return `
+  <div>
+    <div class="cliente-subtotal">
+      <div>
+        <div class="client-name">${esc(g.cliente)}</div>
+        <div class="client-meta">${g.tipoDoc}: ${esc(g.docCliente)} · ${g.documentos.length} factura(s)${g.sucursal?' · '+esc(g.sucursal):''}</div>
+      </div>
+      <div class="client-amt">
+        <div class="saldo mono">${fmtCOP(g.saldo)}</div>
+        ${g.pendiente>0.5 ? `<div class="pend">Pend: ${fmtCOP(g.pendiente)}</div>` : `<div class="paid">Al día</div>`}
+      </div>
+    </div>
+    <div class="stack-gap" style="margin-top:8px;">
+      ${g.documentos.map(d=>documentoRowHtml(d)).join('')}
+    </div>
+  </div>`;
+}
+
+
+/* ================= VENDEDOR: PAGOS (RECIBOS) ================= */
+function renderVendPagos(){
+  const u = AppState.currentUser;
+  let list = AppState.pagos.filter(p=>p.vendedor===u.vendedorName).sort((a,b)=>b.fecha.localeCompare(a.fecha));
+  const filt = AppState.filters.pagosEstado;
+  if(filt==='pendiente') list = list.filter(p=>!p.consignacionId);
+  if(filt==='consignado') list = list.filter(p=>p.consignacionId);
+  const totalPend = sumMonto(AppState.pagos.filter(p=>p.vendedor===u.vendedorName && !p.consignacionId));
+  return `
+  <h1 class="page-title">Recibos de pago</h1>
+  <p class="page-sub">Recibos que has registrado a tus clientes. Se agrupan en una consignación para llevarlos al banco.</p>
+  <div class="kpi-grid" style="grid-template-columns:1fr 1fr;">
+    <div class="kpi-card"><div class="lbl">Pendientes de consignar</div><div class="val mono amber">${fmtCOP(totalPend)}</div></div>
+    <div class="kpi-card"><div class="lbl">Total recibos</div><div class="val mono">${AppState.pagos.filter(p=>p.vendedor===u.vendedorName).length}</div></div>
+  </div>
+  <div class="tabs">
+    <button class="tab-btn ${filt===''?'active':''}" data-action="filter-pagos" data-val="">Todos</button>
+    <button class="tab-btn ${filt==='pendiente'?'active':''}" data-action="filter-pagos" data-val="pendiente">Pendientes</button>
+    <button class="tab-btn ${filt==='consignado'?'active':''}" data-action="filter-pagos" data-val="consignado">Consignados</button>
+  </div>
+  <div class="stack-gap">
+    ${list.map(p=>pagoRowHtml(p)).join('') || `<div class="empty-state"><div class="ic">🧾</div><p>No hay recibos registrados aún. Ábrelos desde la ficha de un cliente.</p></div>`}
+  </div>`;
+}
+function pagoRowHtml(p){
+  const anterior = esCorteAnterior(p.corteId);
+  const corteFecha = corteFechaFor(p.corteId);
+  return `
+  <div class="recibo-row" style="border-left:4px solid ${p.consignacionId?'var(--teal)':'var(--amber)'};">
+    <div class="info">
+      <div class="cli">${esc(p.cliente)} <span class="badge ${p.consignacionId?'badge-teal':'badge-amber'}">${p.consignacionId?'Consignado':'Pendiente'}</span>${anterior?` <span class="badge badge-ink" title="La factura de este abono puede ya no estar en el corte vigente">Corte anterior${corteFecha?': '+fmtDate(corteFecha):''}</span>`:''}</div>
+      <div class="meta">Recibo ${esc(p.recibo)} · Factura ${esc(p.documento||'—')} · ${fmtDate(p.fecha)} · ${esc(p.metodo)}</div>
+    </div>
+    <div class="amt mono">${fmtCOP(p.monto)}</div>
+  </div>`;
+}
+
+// Tarjeta de recibo SELECCIONABLE con un toque (para pantallas de consignar).
+function selectableReciboRowHtml(p){
+  const selected = AppState.selectedRecibos.has(p.id);
+  return `
+  <div class="recibo-row selectable ${selected?'selected':''}" data-action="toggle-recibo" data-id="${esc(p.id)}">
+    <div class="check-dot">${selected?ICONS.check:''}</div>
+    <div class="info">
+      <div class="cli">${esc(p.cliente)}</div>
+      <div class="meta">Recibo ${esc(p.recibo)} · Factura ${esc(p.documento||'—')} · ${fmtDate(p.fecha)}</div>
+    </div>
+    <div class="amt mono">${fmtCOP(p.monto)}</div>
+  </div>`;
+}
+
+// Barra fija con el conteo/suma de lo seleccionado y el botón para pasar al formulario.
+function selectionBarHtml(pagosDelGrupo, vendedorAttr){
+  const seleccionados = pagosDelGrupo.filter(p=>AppState.selectedRecibos.has(p.id));
+  const sum = sumMonto(seleccionados);
+  if(seleccionados.length===0) return '';
+  return `
+  <div class="selection-bar">
+    <div class="info">
+      <div class="count">${seleccionados.length} recibo(s) seleccionado(s)</div>
+      <div class="sum">${fmtCOP(sum)}</div>
+    </div>
+    <div class="actions">
+      <button class="clear-btn" type="button" data-action="clear-seleccion" ${vendedorAttr?`data-vendedor="${esc(vendedorAttr)}"`:''}>Limpiar</button>
+      <button class="btn btn-accent btn-sm" data-action="open-nueva-consignacion" ${vendedorAttr?`data-vendedor="${esc(vendedorAttr)}"`:''}>${ICONS.bank} Consignar</button>
+    </div>
+  </div>`;
+}
+
+/* ================= VENDEDOR: CONSIGNACIONES ================= */
+function renderVendConsignaciones(){
+  const u = AppState.currentUser;
+  const pendientes = AppState.pagos.filter(p=>p.vendedor===u.vendedorName && !p.consignacionId).sort((a,b)=>String(b.fecha).localeCompare(String(a.fecha)));
+  const historial = AppState.consignaciones.filter(c=>c.vendedor===u.vendedorName).sort((a,b)=>String(b.fecha).localeCompare(String(a.fecha)));
+  return `
+  <h1 class="page-title">Consignaciones</h1>
+  <p class="page-sub">Toca los recibos que vas a consignar juntos. El valor de la consignación debe coincidir con lo seleccionado.</p>
+  ${selectionBarHtml(pendientes)}
+  <div class="section-title">Recibos pendientes (${pendientes.length})</div>
+  <div class="stack-gap" style="margin-bottom:22px;">
+    ${pendientes.map(p=>selectableReciboRowHtml(p)).join('') || `<div class="empty-state"><div class="ic">🧾</div><p>No tienes recibos pendientes por consignar.</p></div>`}
+  </div>
+  <div class="section-title">Historial de consignaciones</div>
+  <div class="stack-gap">
+    ${historial.map(c=>consignacionRowHtml(c)).join('') || `<div class="empty-state"><div class="ic">🏦</div><p>Todavía no has registrado consignaciones.</p></div>`}
+  </div>`;
+}
+function consignacionRowHtml(c){
+  return `
+  <div class="card card-pad" style="cursor:pointer;" data-action="open-detalle-consignacion" data-id="${esc(c.id)}">
+    <div class="flex-between">
+      <div>
+        <div style="font-weight:700;font-size:14px;">${fmtDate(c.fecha)} · ${esc(c.banco||'Banco')}</div>
+        <div class="hint">Ref: ${esc(c.referencia||'—')} · ${c.pagosIds.length} recibo(s)</div>
+      </div>
+      <div class="mono" style="font-weight:700;">${fmtCOP(c.monto)}</div>
+    </div>
+  </div>`;
+}
+
+
+/* ================= ADMIN: INICIO ================= */
+function renderAdminInicio(){
+  const vendedores = allVendedorNames();
+  const totals = vendedores.map(v=>({vendedor:v, ...vendorTotals(v)}));
+  const saldoTotal = totals.reduce((s,t)=>s+t.saldoTotal,0);
+  const porConsignar = totals.reduce((s,t)=>s+t.porConsignar,0);
+  const consignado = totals.reduce((s,t)=>s+t.consignado,0);
+  const pendiente = totals.reduce((s,t)=>s+t.pendiente,0);
+  const maxSaldo = Math.max(1, ...totals.map(t=>t.saldoTotal));
+  return `
+  ${cortePillHtml()}
+  <h1 class="page-title">Resumen general</h1>
+  <p class="page-sub">Consolidado de los ${vendedores.length} vendedores activos.</p>
+  <div class="kpi-grid">
+    <div class="kpi-card"><div class="lbl">Saldo total cartera</div><div class="val mono">${fmtCOP(saldoTotal)}</div></div>
+    <div class="kpi-card"><div class="lbl">Pendiente por consignar</div><div class="val mono amber">${fmtCOP(porConsignar)}</div></div>
+    <div class="kpi-card"><div class="lbl">Consignado histórico</div><div class="val mono teal">${fmtCOP(consignado)}</div></div>
+    <div class="kpi-card"><div class="lbl">Pendiente por cobrar</div><div class="val mono accent">${fmtCOP(pendiente)}</div></div>
+  </div>
+  <div class="card card-pad">
+    <div class="section-title">Saldo por vendedor <button class="link-btn" data-action="nav" data-view="reporte">Reporte detallado ${ICONS.chev}</button></div>
+    ${[...totals].sort((a,b)=>b.saldoTotal-a.saldoTotal).map(t=>`
+      <div class="bar-row">
+        <div class="name">${esc(t.vendedor)}</div>
+        <div class="track"><div class="fill" style="width:${Math.max(3,(t.saldoTotal/maxSaldo*100))}%"></div></div>
+        <div class="amt">${fmtCOP(t.saldoTotal)}</div>
+      </div>`).join('') || '<p class="hint">No hay datos de vendedores todavía.</p>'}
+  </div>`;
+}
+
+/* ================= ADMIN: VENDEDORES ================= */
+function renderAdminVendedores(){
+  const corte = getLatestCorte();
+  const vendUsers = AppState.users.filter(u=>u.role==='vendedor');
+  return `
+  <h1 class="page-title">Vendedores</h1>
+  <p class="page-sub">Crea usuarios de vendedor(a) y gestiona sus credenciales de acceso.</p>
+  <div class="flex-between" style="margin-bottom:14px;">
+    <div class="hint">${vendUsers.length} usuarios registrados</div>
+    <button class="btn btn-accent btn-sm" data-action="open-nuevo-vendedor">${ICONS.plus} Nuevo vendedor</button>
+  </div>
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead><tr><th>Nombre</th><th>Usuario</th><th>Vendedor en corte</th><th>Saldo cartera</th><th>Estado</th><th></th></tr></thead>
+      <tbody>
+        ${vendUsers.map(u=>{
+          const t = vendorTotals(u.vendedorName);
+          return `<tr>
+            <td>${esc(u.nombre)}</td>
+            <td class="mono">${esc(u.username)}</td>
+            <td>${esc(u.vendedorName)} ${t.clientes===0 && corte ? '<span class="badge badge-red">sin coincidencia</span>':''}</td>
+            <td class="mono">${fmtCOP(t.saldoTotal)}</td>
+            <td>${u.activo===false?'<span class="badge badge-red">Inactivo</span>':'<span class="badge badge-teal">Activo</span>'}</td>
+            <td style="text-align:right;">
+              <button class="icon-btn" data-action="open-editar-vendedor" data-username="${esc(u.username)}" title="Editar">${ICONS.pencil}</button>
+            </td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+  </div>
+  <p class="hint" style="margin-top:10px;">"Vendedor en corte" debe coincidir exactamente con el nombre que trae el archivo de saldos para que el usuario vea su cartera correctamente.</p>`;
+}
+
+/* ================= ADMIN: CORTES ================= */
+function renderAdminCortes(){
+  const cortes = [...AppState.cortes].sort((a,b)=>String(b.uploadedAt).localeCompare(String(a.uploadedAt)));
+  const latest = getLatestCorte();
+  return `
+  <h1 class="page-title">Cortes de cartera</h1>
+  <p class="page-sub">Cada corte reemplaza el saldo vigente que ven los vendedores. Sube un nuevo archivo cuando saques el informe de saldos.</p>
+  <div class="card card-pad" style="margin-bottom:18px;">
+    <div class="section-title">Subir nuevo corte</div>
+    <label class="upload-box" id="upload-box">
+      ${ICONS.upload}<br><br>
+      <b>Sube el archivo .xlsx</b> del estado de cuenta por vendedor<br>
+      <input type="file" id="corte-file" accept=".xlsx,.xls">
+    </label>
+    <div id="upload-status" class="hint" style="margin-top:10px;"></div>
+  </div>
+  <div class="section-title">Historial de cortes</div>
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead><tr><th>Fecha corte</th><th>Archivo</th><th>Facturas</th><th>Cargado</th><th></th></tr></thead>
+      <tbody>
+        ${cortes.map(c=>`<tr>
+          <td>${fmtDate(c.fecha)} ${latest && c.id===latest.id?'<span class="badge badge-teal">Vigente</span>':''}</td>
+          <td>${esc(c.archivo)}</td>
+          <td class="mono">${c.registros}</td>
+          <td>${esc(String(c.uploadedAt||'').replace('T',' ').slice(0,16))}</td>
+          <td></td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+  </div>`;
+}
+
+/* ================= ADMIN: REPORTE DETALLADO ================= */
+function renderAdminReporte(){
+  const corte = getCurrentCorte();
+  if(!corte) return '<div class="empty-state">No hay corte cargado todavía.</div>';
+  const latest = getLatestCorte();
+  const vendedores = allVendedorNames();
+  const filtV = AppState.filters.reporteVendedor;
+  let rows = [];
+  vendedores.forEach(v=>{
+    if(filtV && filtV!==v) return;
+    documentRowsForVendor(v).forEach(r=>rows.push(r));
+  });
+  rows.sort((a,b)=> b.pendiente-a.pendiente);
+  const totSaldo = rows.reduce((s,r)=>s+r.saldo,0);
+  const totPagado = rows.reduce((s,r)=>s+r.pagado,0);
+  const totPend = rows.reduce((s,r)=>s+r.pendiente,0);
+  const cortesOrdenados = [...AppState.cortes].sort((a,b)=>String(b.uploadedAt).localeCompare(String(a.uploadedAt)));
+  return `
+  <h1 class="page-title">Reporte detallado</h1>
+  <p class="page-sub">Saldo por factura/documento de todos los vendedores en el corte seleccionado. "Cliente" es la identificación (CC/NIT); "Documento" es la factura o movimiento contable.</p>
+  <div class="search-row">
+    <select id="reporte-corte">
+      ${cortesOrdenados.map(c=>`<option value="${esc(c.id)}" ${corte.id===c.id?'selected':''}>${fmtDate(c.fecha)}${latest && c.id===latest.id?' (vigente)':''}</option>`).join('')}
+    </select>
+    <select id="reporte-vendedor">
+      <option value="">Todos los vendedores</option>
+      ${vendedores.map(v=>`<option value="${esc(v)}" ${filtV===v?'selected':''}>${esc(v)}</option>`).join('')}
+    </select>
+    <button class="btn btn-ghost btn-sm" data-action="export-csv">${ICONS.download} Exportar CSV</button>
+  </div>
+  <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:16px;">
+    <div class="kpi-card"><div class="lbl">Saldo corte</div><div class="val mono">${fmtCOP(totSaldo)}</div></div>
+    <div class="kpi-card"><div class="lbl">Pagos registrados</div><div class="val mono teal">${fmtCOP(totPagado)}</div></div>
+    <div class="kpi-card"><div class="lbl">Pendiente</div><div class="val mono amber">${fmtCOP(totPend)}</div></div>
+  </div>
+  <p class="hint" style="margin-bottom:10px;">Toca una fila para registrar un abono directamente sobre esa factura.</p>
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead><tr><th>Vendedor</th><th>Cliente</th><th>Identificación</th><th>Documento (factura)</th><th>Fecha</th><th>Saldo</th><th>Pagado</th><th>Pendiente</th><th>Estado</th></tr></thead>
+      <tbody>
+        ${rows.map(r=>`<tr class="clickable-row" data-action="open-documento" data-vendedor="${esc(r.vendedor)}" data-key="${esc(r.key)}">
+          <td>${esc(r.vendedor)}</td>
+          <td>${esc(r.cliente)}</td>
+          <td class="mono">${r.tipoDoc} ${esc(r.docCliente)}</td>
+          <td class="mono">${esc(r.documento)}</td>
+          <td>${fmtDate(r.fecha)}</td>
+          <td class="mono">${fmtCOP(r.saldo)}</td>
+          <td class="mono">${fmtCOP(r.pagado)}</td>
+          <td class="mono">${fmtCOP(r.pendiente)}</td>
+          <td>${r.pendiente<=0.5?'<span class="badge badge-teal">Al día</span>':'<span class="badge badge-amber">Pendiente</span>'}</td>
+        </tr>`).join('') || `<tr><td colspan="9"><div class="empty-state">Sin registros para este filtro.</div></td></tr>`}
+      </tbody>
+    </table>
+  </div>`;
+}
+
+/* ================= ADMIN: CONSIGNACIONES ================= */
+function renderAdminConsignaciones(){
+  const tab = AppState.filters.consigTab || 'hoy';
+  return `
+  <h1 class="page-title">Consignaciones bancarias</h1>
+  <p class="page-sub">Recaudo del día por vendedor y el histórico de consignaciones.</p>
+  <div class="tabs">
+    <button class="tab-btn ${tab==='hoy'?'active':''}" data-action="admin-consig-tab" data-val="hoy">Recaudo de hoy</button>
+    <button class="tab-btn ${tab==='historial'?'active':''}" data-action="admin-consig-tab" data-val="historial">Historial</button>
+  </div>
+  ${tab==='hoy' ? renderAdminRecaudoHoy() : renderAdminConsigHistorial()}`;
+}
+
+function renderAdminRecaudoHoy(){
+  const hoy = todayISO();
+  const deHoy = AppState.pagos.filter(p=>p.fecha===hoy);
+  const pendientesHoy = deHoy.filter(p=>!p.consignacionId);
+  const totalHoy = sumMonto(deHoy);
+  const totalPendHoy = sumMonto(pendientesHoy);
+  const porVendedor = new Map();
+  pendientesHoy.forEach(p=>{
+    if(!porVendedor.has(p.vendedor)) porVendedor.set(p.vendedor, []);
+    porVendedor.get(p.vendedor).push(p);
+  });
+  return `
+  <div class="kpi-grid" style="grid-template-columns:repeat(2,1fr);margin-bottom:16px;">
+    <div class="kpi-card"><div class="lbl">Recaudado hoy</div><div class="val mono">${fmtCOP(totalHoy)}</div></div>
+    <div class="kpi-card"><div class="lbl">Pendiente por consignar hoy</div><div class="val mono amber">${fmtCOP(totalPendHoy)}</div></div>
+  </div>
+  <p class="hint" style="margin-bottom:12px;">Toca los recibos de un vendedor para seleccionarlos y consignarlos juntos.</p>
+  <div class="stack-gap">
+    ${[...porVendedor.entries()].map(([vendedor, pagos])=>`
+      <div class="card card-pad">
+        <div style="font-weight:700;font-size:14px;margin-bottom:10px;">${esc(vendedor)}</div>
+        ${selectionBarHtml(pagos, vendedor)}
+        <div class="stack-gap">
+          ${pagos.map(p=>selectableReciboRowHtml(p)).join('')}
+        </div>
+        <p class="hint" style="margin-top:8px;margin-bottom:0;">Total pendiente de ${esc(vendedor)} hoy: <b class="mono">${fmtCOP(sumMonto(pagos))}</b></p>
+      </div>`).join('') || `<div class="empty-state"><div class="ic">🧾</div><p>Todavía no se han registrado recaudos hoy, o ya quedaron todos consignados.</p></div>`}
+  </div>`;
+}
+
+function renderAdminConsigHistorial(){
+  const list = [...AppState.consignaciones].sort((a,b)=>String(b.fecha).localeCompare(String(a.fecha)));
+  const totalConsig = sumMonto(list);
+  const pendGlobal = sumMonto(AppState.pagos.filter(p=>!p.consignacionId));
+  return `
+  <div class="kpi-grid" style="grid-template-columns:repeat(2,1fr);margin-bottom:16px;">
+    <div class="kpi-card"><div class="lbl">Total consignado</div><div class="val mono teal">${fmtCOP(totalConsig)}</div></div>
+    <div class="kpi-card"><div class="lbl">Pendiente por consignar (todos)</div><div class="val mono amber">${fmtCOP(pendGlobal)}</div></div>
+  </div>
+  <div class="stack-gap">
+    ${list.map(c=>`
+      <div class="card card-pad" style="cursor:pointer;" data-action="open-detalle-consignacion" data-id="${esc(c.id)}">
+        <div class="flex-between">
+          <div>
+            <div style="font-weight:700;font-size:14px;">${esc(c.vendedor)}</div>
+            <div class="hint">${fmtDate(c.fecha)} · ${esc(c.banco||'Banco')} · Ref ${esc(c.referencia||'—')} · ${(c.pagosIds||[]).length} recibo(s)${(c.comprobantes&&c.comprobantes.length)?' · '+c.comprobantes.length+' imagen(es)':''}</div>
+          </div>
+          <div class="mono" style="font-weight:700;">${fmtCOP(c.monto)}</div>
+        </div>
+      </div>`).join('') || `<div class="empty-state"><div class="ic">🏦</div><p>No hay consignaciones registradas todavía.</p></div>`}
+  </div>`;
+}
+
+
+/* ================= MODALS ================= */
+function renderModal(){
+  const m = AppState.modal;
+  let inner = '';
+  if(m.type==='cliente') inner = modalClienteHtml(m.payload);
+  else if(m.type==='documento') inner = modalDocumentoHtml(m.payload);
+  else if(m.type==='nueva-consignacion') inner = modalNuevaConsignacionHtml(m.payload);
+  else if(m.type==='nuevo-vendedor') inner = modalNuevoVendedorHtml();
+  else if(m.type==='editar-vendedor') inner = modalEditarVendedorHtml(m.payload);
+  else if(m.type==='change-pw') inner = modalChangePwHtml();
+  else if(m.type==='detalle-consignacion') inner = modalDetalleConsignacionHtml(m.payload);
+  return `<div class="modal-backdrop" data-action="backdrop">
+    <div class="modal" data-stop="1">${inner}</div>
+  </div>`;
+}
+
+// Nivel 1: ficha del cliente con la lista de sus facturas/documentos abiertos.
+function modalClienteHtml(clienteKeyVal){
+  const u = AppState.currentUser;
+  const g = findClienteGroup(u.vendedorName, clienteKeyVal);
+  if(!g) return `<div class="modal-head"><h3>Cliente no encontrado</h3><button class="modal-close" data-action="close-modal">${ICONS.x}</button></div>`;
+  return `
+  <div class="modal-head">
+    <div><h3>${esc(g.cliente)}</h3><p>${g.tipoDoc}: ${esc(g.docCliente)}${g.sucursal?' · '+esc(g.sucursal):''}</p></div>
+    <button class="modal-close" data-action="close-modal">${ICONS.x}</button>
+  </div>
+  <div class="kpi-grid" style="grid-template-columns:1fr 1fr 1fr;margin-bottom:16px;">
+    <div class="kpi-card" style="padding:12px;"><div class="lbl">Saldo corte</div><div class="val mono" style="font-size:15px;">${fmtCOP(g.saldo)}</div></div>
+    <div class="kpi-card" style="padding:12px;"><div class="lbl">Pagado</div><div class="val mono teal" style="font-size:15px;">${fmtCOP(g.pagado)}</div></div>
+    <div class="kpi-card" style="padding:12px;"><div class="lbl">Pendiente</div><div class="val mono amber" style="font-size:15px;">${fmtCOP(g.pendiente)}</div></div>
+  </div>
+  <div class="section-title">Facturas / documentos (${g.documentos.length})</div>
+  <p class="hint" style="margin-top:-6px;margin-bottom:10px;">Toca una factura para registrar el abono correspondiente.</p>
+  <div class="stack-gap">
+    ${g.documentos.map(d=>documentoRowHtml(d)).join('')}
+  </div>`;
+}
+
+function documentoRowHtml(d){
+  const pagada = d.pendiente<=0.5;
+  return `
+  <button class="recibo-row" style="width:100%;text-align:left;border-left:4px solid ${pagada?'var(--teal)':'var(--amber)'};background:none;cursor:pointer;" data-action="open-documento" data-vendedor="${esc(d.vendedor)}" data-key="${esc(d.key)}">
+    <div class="info">
+      <div class="cli">${esc(d.documento)} <span class="badge ${pagada?'badge-teal':'badge-amber'}">${pagada?'Al día':'Pendiente'}</span></div>
+      <div class="meta">${fmtDate(d.fecha)} · ${esc(d.concepto||'')}${d.pagado>0.5?' · Abonado: '+fmtCOP(d.pagado):''}</div>
+    </div>
+    <div class="amt">
+      <div class="mono" style="font-weight:600;">${fmtCOP(d.pendiente)}</div>
+      ${d.pagado>0.5 ? `<div style="font-size:10.5px;color:var(--text-soft);text-decoration:line-through;">${fmtCOP(d.saldo)}</div>` : ''}
+    </div>
+  </button>`;
+}
+
+// Nivel 2: una factura puntual — registrar abono + ver su historial de pagos.
+// payload = { vendedorName, key }. Se usa tanto desde "Mis clientes" (vendedor)
+// como desde el Reporte detallado (admin, sobre cualquier vendedor).
+function modalDocumentoHtml(payload){
+  const vendedorName = payload && payload.vendedorName;
+  const key = payload && payload.key;
+  const d = findDocumento(vendedorName, key);
+  if(!d) return `<div class="modal-head"><h3>Factura no encontrada</h3><button class="modal-close" data-action="close-modal">${ICONS.x}</button></div>`;
+  const esPropio = AppState.currentUser.role==='vendedor' && AppState.currentUser.vendedorName===vendedorName;
+  const hist = pagosDe(vendedorName, AppState.currentCorteId, d.cliente, d.documento).sort((a,b)=>String(b.fecha).localeCompare(String(a.fecha)));
+  return `
+  <div class="modal-head">
+    <div>
+      ${esPropio ? `<button class="link-btn" data-action="open-cliente" data-key="${esc(d.clienteKey)}" style="margin-bottom:6px;">← ${esc(d.cliente)}</button>` : `<div class="hint" style="margin-bottom:4px;">${esc(d.vendedor)} · ${esc(d.cliente)}</div>`}
+      <h3>Factura ${esc(d.documento)}</h3>
+      <p>${fmtDate(d.fecha)}${d.concepto?' · '+esc(d.concepto):''}</p>
+    </div>
+    <button class="modal-close" data-action="close-modal">${ICONS.x}</button>
+  </div>
+  <div class="kpi-grid" style="grid-template-columns:1fr 1fr 1fr;margin-bottom:16px;">
+    <div class="kpi-card" style="padding:12px;"><div class="lbl">Saldo factura</div><div class="val mono" style="font-size:15px;">${fmtCOP(d.saldo)}</div></div>
+    <div class="kpi-card" style="padding:12px;"><div class="lbl">Pagado</div><div class="val mono teal" style="font-size:15px;">${fmtCOP(d.pagado)}</div></div>
+    <div class="kpi-card" style="padding:12px;"><div class="lbl">Pendiente</div><div class="val mono amber" style="font-size:15px;">${fmtCOP(d.pendiente)}</div></div>
+  </div>
+  <div class="section-title">Registrar abono a esta factura</div>
+  <form id="pago-form" data-vendedor="${esc(d.vendedor)}" data-cliente="${esc(d.cliente)}" data-doccliente="${esc(d.docCliente)}" data-documento="${esc(d.documento)}" data-clientekey="${esc(d.clienteKey)}">
+    <div class="form-row">
+      <div class="field"><label>Monto abonado</label><input type="number" min="1" step="1" id="pago-monto" placeholder="0" required></div>
+      <div class="field"><label>Fecha</label><input type="date" id="pago-fecha" value="${todayISO()}" required></div>
+    </div>
+    <div class="form-row">
+      <div class="field"><label>Método</label>
+        <select id="pago-metodo">
+          <option>Transferencia</option><option>Efectivo</option><option>Cheque</option><option>Datáfono</option>
+        </select>
+      </div>
+      <div class="field"><label>N° recibo</label><input type="text" id="pago-recibo" placeholder="Se autogenera" value="${nextReciboNumber(d.vendedor)}"></div>
+    </div>
+    <div class="field"><label>Notas (opcional)</label><input type="text" id="pago-notas" placeholder="Observaciones del abono"></div>
+    <button class="btn btn-accent" style="width:100%;" type="submit">${ICONS.plus} Registrar abono</button>
+  </form>
+  <div class="divider"></div>
+  <div class="section-title">Historial de abonos a esta factura</div>
+  <div class="stack-gap">
+    ${hist.map(p=>pagoRowHtml(p)).join('') || '<p class="hint">Sin abonos registrados a esta factura en este corte.</p>'}
+  </div>`;
+}
+function nextReciboNumber(vendedorName){
+  const mine = AppState.pagos.filter(p=>p.vendedor===vendedorName);
+  const n = mine.length+1;
+  const tag = vendedorName.split(' ').map(w=>w[0]).join('').slice(0,3).toUpperCase();
+  return 'R-'+tag+'-'+String(n).padStart(4,'0');
+}
+
+function modalNuevaConsignacionHtml(payload){
+  const u = AppState.currentUser;
+  const vendedorName = (payload && payload.vendedorName) || u.vendedorName;
+  const pendientes = AppState.pagos.filter(p=>p.vendedor===vendedorName && !p.consignacionId);
+  const seleccionados = pendientes.filter(p=>AppState.selectedRecibos.has(p.id)).sort((a,b)=>String(b.fecha).localeCompare(String(a.fecha)));
+  const selSum = seleccionados.reduce((s,p)=>s+Number(p.monto),0);
+  return `
+  <div class="modal-head">
+    <div><h3>Nueva consignación</h3><p>${esc(vendedorName)} · ${seleccionados.length} recibo(s) seleccionado(s)</p></div>
+    <button class="modal-close" data-action="close-modal">${ICONS.x}</button>
+  </div>
+  <div class="stack-gap" style="max-height:26vh;overflow-y:auto;margin-bottom:6px;">
+    ${seleccionados.map(p=>`
+      <div class="recibo-row">
+        <div class="info"><div class="cli">${esc(p.cliente)}</div><div class="meta">Recibo ${esc(p.recibo)} · Factura ${esc(p.documento||'—')} · ${fmtDate(p.fecha)}</div></div>
+        <div class="amt mono">${fmtCOP(p.monto)}</div>
+      </div>`).join('') || '<p class="hint">No seleccionaste ningún recibo. Cierra esta ventana y toca los recibos que quieres consignar.</p>'}
+  </div>
+  <div class="sum-bar">
+    <div><div class="lbl">Suma de recibos seleccionados</div><div class="val">${fmtCOP(selSum)}</div></div>
+    <div style="text-align:right;"><div class="lbl">Seleccionados</div><div class="val">${seleccionados.length}</div></div>
+  </div>
+  <form id="consignacion-form" data-sum="${selSum}" data-vendedor="${esc(vendedorName)}">
+    <div class="form-row">
+      <div class="field"><label>Valor consignado en banco</label><input type="number" min="1" step="1" id="consig-monto" placeholder="0" value="${selSum||''}" required></div>
+      <div class="field"><label>Fecha consignación</label><input type="date" id="consig-fecha" value="${todayISO()}" required></div>
+    </div>
+    <div class="form-row">
+      <div class="field"><label>Banco</label><input type="text" id="consig-banco" placeholder="Ej: Bancolombia"></div>
+      <div class="field"><label>N° referencia / comprobante</label><input type="text" id="consig-ref" placeholder="Opcional"></div>
+    </div>
+    <div id="consig-match-msg" class="hint"></div>
+    <div class="field" style="margin-top:6px;">
+      <label>Imágenes de soporte (foto del comprobante bancario)</label>
+      <label class="upload-box" style="padding:16px;">
+        ${ICONS.upload}<br>
+        <span style="font-size:12.5px;">Toca para adjuntar una o varias fotos</span>
+        <input type="file" id="consig-imagenes" accept="image/*" multiple>
+      </label>
+    </div>
+    ${AppState.consigImages.length ? `<div class="img-preview-grid">${AppState.consigImages.map((img,i)=>`
+      <div class="img-preview">
+        <img src="${img.dataUrl}" alt="comprobante">
+        <button type="button" class="img-remove" data-action="remove-consig-image" data-idx="${i}">${ICONS.x}</button>
+      </div>`).join('')}</div>` : ''}
+    <button class="btn btn-accent" style="width:100%;margin-top:12px;" type="submit" ${seleccionados.length===0?'disabled':''}>${ICONS.bank} Registrar consignación</button>
+  </form>`;
+}
+
+function modalNuevoVendedorHtml(){
+  return `
+  <div class="modal-head">
+    <div><h3>Nuevo vendedor(a)</h3><p>Crea el usuario de acceso para un vendedor.</p></div>
+    <button class="modal-close" data-action="close-modal">${ICONS.x}</button>
+  </div>
+  <form id="nuevo-vendedor-form">
+    <div class="field"><label>Nombre completo</label><input type="text" id="nv-nombre" placeholder="Como aparece en el corte de cartera" required></div>
+    <div class="form-row">
+      <div class="field"><label>Usuario</label><input type="text" id="nv-username" placeholder="usuario.acceso" required></div>
+      <div class="field"><label>Contraseña</label><input type="text" id="nv-password" placeholder="Contraseña temporal" value="vendedor123" required></div>
+    </div>
+    <p class="hint" style="margin-bottom:10px;">El nombre completo debe coincidir exactamente con el nombre del vendedor tal como aparece en el archivo de saldos, para que vea su cartera correctamente.</p>
+    <button class="btn btn-accent" style="width:100%;" type="submit">${ICONS.plus} Crear vendedor</button>
+  </form>`;
+}
+
+function modalEditarVendedorHtml(username){
+  const u = AppState.users.find(x=>x.username===username);
+  if(!u) return `<div class="modal-head"><h3>No encontrado</h3><button class="modal-close" data-action="close-modal">${ICONS.x}</button></div>`;
+  return `
+  <div class="modal-head">
+    <div><h3>${esc(u.nombre)}</h3><p>Editar datos de acceso</p></div>
+    <button class="modal-close" data-action="close-modal">${ICONS.x}</button>
+  </div>
+  <form id="editar-vendedor-form" data-username="${esc(u.username)}">
+    <div class="field"><label>Nombre completo</label><input type="text" id="ev-nombre" value="${esc(u.nombre)}" required></div>
+    <div class="field"><label>Nombre exacto en corte de cartera</label><input type="text" id="ev-vendedorname" value="${esc(u.vendedorName||'')}" required></div>
+    <div class="form-row">
+      <div class="field"><label>Usuario</label><input type="text" value="${esc(u.username)}" disabled></div>
+      <div class="field"><label>Nueva contraseña (opcional)</label><input type="text" id="ev-password" placeholder="Dejar en blanco para no cambiar"></div>
+    </div>
+    <div class="field">
+      <label>Estado</label>
+      <select id="ev-activo"><option value="true" ${u.activo!==false?'selected':''}>Activo</option><option value="false" ${u.activo===false?'selected':''}>Inactivo</option></select>
+    </div>
+    <button class="btn btn-accent" style="width:100%;" type="submit">${ICONS.check} Guardar cambios</button>
+  </form>`;
+}
+
+function modalChangePwHtml(){
+  return `
+  <div class="modal-head">
+    <div><h3>Cambiar contraseña</h3><p>Actualiza tu contraseña de acceso.</p></div>
+    <button class="modal-close" data-action="close-modal">${ICONS.x}</button>
+  </div>
+  <form id="change-pw-form">
+    <div class="field"><label>Contraseña actual</label><input type="password" id="cp-actual" required></div>
+    <div class="field"><label>Nueva contraseña</label><input type="password" id="cp-nueva" minlength="4" required></div>
+    <button class="btn btn-accent" style="width:100%;" type="submit">${ICONS.key} Actualizar contraseña</button>
+  </form>`;
+}
+
+function modalDetalleConsignacionHtml(id){
+  const c = AppState.consignaciones.find(x=>x.id===id);
+  if(!c) return `<div class="modal-head"><h3>No encontrada</h3><button class="modal-close" data-action="close-modal">${ICONS.x}</button></div>`;
+  const recibos = AppState.pagos.filter(p=>c.pagosIds.includes(p.id));
+  const comprobantes = c.comprobantes || [];
+  return `
+  <div class="modal-head">
+    <div><h3>Consignación · ${esc(c.vendedor)}</h3><p>${fmtDate(c.fecha)} · ${esc(c.banco||'Banco')} · Ref ${esc(c.referencia||'—')}</p></div>
+    <button class="modal-close" data-action="close-modal">${ICONS.x}</button>
+  </div>
+  <div class="sum-bar"><div class="lbl">Valor consignado</div><div class="val">${fmtCOP(c.monto)}</div></div>
+  ${comprobantes.length ? `
+    <div class="section-title">Comprobante${comprobantes.length>1?'s':''} (${comprobantes.length})</div>
+    <div class="img-preview-grid" style="margin-bottom:16px;">
+      ${comprobantes.map(fid=>`
+        <a href="https://drive.google.com/file/d/${esc(fid)}/view" target="_blank" rel="noopener" class="img-preview">
+          <img src="https://drive.google.com/thumbnail?id=${esc(fid)}&sz=w300" alt="comprobante" loading="lazy">
+        </a>`).join('')}
+    </div>` : ''}
+  <div class="section-title">Recibos incluidos (${recibos.length})</div>
+  <div class="stack-gap">${recibos.map(p=>pagoRowHtml(p)).join('')}</div>`;
+}
+
+
+/* ================= GLOBAL EVENT DELEGATION ================= */
+function closeModal(){ AppState.modal=null; AppState.consigImages=[]; render(); }
+
+async function ensureLatestCorteLoaded(){
+  const latest = getLatestCorte();
+  if(latest && AppState.currentCorteId!==latest.id){ await loadSaldosForCorte(latest.id); }
+}
+
+function initGlobalEvents(){
+  document.addEventListener('click', async (e)=>{
+    const backdrop = e.target.closest('[data-action="backdrop"]');
+    if(backdrop && !e.target.closest('[data-stop]')){ closeModal(); return; }
+
+    const btn = e.target.closest('[data-action]');
+    if(!btn) return;
+    const action = btn.getAttribute('data-action');
+
+    if(action==='nav'){
+      const view = btn.getAttribute('data-view');
+      AppState.userMenuOpen=false;
+      if(view!=='reporte'){ await ensureLatestCorteLoaded(); }
+      AppState.view = view;
+      render();
+      return;
+    }
+    if(action==='logout'){ doLogout(); return; }
+    if(action==='toggle-user-menu'){ AppState.userMenuOpen = !AppState.userMenuOpen; render(); return; }
+    if(action==='close-modal'){ closeModal(); return; }
+    if(action==='open-cliente'){ AppState.modal={type:'cliente', payload: btn.getAttribute('data-key')}; render(); return; }
+    if(action==='open-documento'){ AppState.modal={type:'documento', payload:{vendedorName: btn.getAttribute('data-vendedor'), key: btn.getAttribute('data-key')}}; render(); return; }
+    if(action==='open-nueva-consignacion'){ AppState.consigImages=[]; AppState.modal={type:'nueva-consignacion', payload:{vendedorName: btn.getAttribute('data-vendedor')||undefined}}; render(); return; }
+    if(action==='clear-seleccion'){
+      const vendedor = btn.getAttribute('data-vendedor');
+      if(vendedor){
+        AppState.pagos.filter(p=>p.vendedor===vendedor).forEach(p=>AppState.selectedRecibos.delete(p.id));
+      } else {
+        AppState.selectedRecibos = new Set();
+      }
+      render(); return;
+    }
+    if(action==='toggle-recibo'){
+      const id = btn.getAttribute('data-id');
+      if(AppState.selectedRecibos.has(id)) AppState.selectedRecibos.delete(id); else AppState.selectedRecibos.add(id);
+      render(); return;
+    }
+    if(action==='admin-consig-tab'){ AppState.filters.consigTab = btn.getAttribute('data-val'); render(); return; }
+    if(action==='remove-consig-image'){ const idx = parseInt(btn.getAttribute('data-idx'),10); AppState.consigImages.splice(idx,1); render(); return; }
+    if(action==='open-nuevo-vendedor'){ AppState.modal={type:'nuevo-vendedor'}; render(); return; }
+    if(action==='open-editar-vendedor'){ AppState.modal={type:'editar-vendedor', payload: btn.getAttribute('data-username')}; render(); return; }
+    if(action==='open-change-pw'){ AppState.modal={type:'change-pw'}; AppState.userMenuOpen=false; render(); return; }
+    if(action==='open-detalle-consignacion'){ AppState.modal={type:'detalle-consignacion', payload: btn.getAttribute('data-id')}; render(); return; }
+    if(action==='filter-pagos'){ AppState.filters.pagosEstado = btn.getAttribute('data-val'); render(); return; }
+    if(action==='export-csv'){ exportReporteCSV(); return; }
+    if(action==='reconfigure-sheet'){ AppState.connected=false; connectErrorMsg=''; render(); return; }
+    if(action==='retry-connect'){ await tryAutoConnect(); render(); return; }
+  });
+
+  document.addEventListener('change', async (e)=>{
+    if(e.target.id==='cliente-search'){ return; }
+    if(e.target.id==='reporte-vendedor'){ AppState.filters.reporteVendedor = e.target.value; render(); return; }
+    if(e.target.id==='reporte-corte'){
+      AppState.loading = true; render();
+      try{ await loadSaldosForCorte(e.target.value); }catch(err){ showToast('No se pudo cargar ese corte.', 'err'); }
+      AppState.loading = false; render();
+      return;
+    }
+    if(e.target.id==='corte-file'){ handleCorteFile(e.target.files[0]); return; }
+    if(e.target.id==='consig-imagenes'){ handleConsigImagenes(e.target.files); e.target.value=''; return; }
+  });
+
+  document.addEventListener('input', (e)=>{
+    if(e.target.id==='cliente-search'){
+      AppState.filters.clienteQ = e.target.value;
+      const caret = e.target.selectionStart;
+      render();
+      const el = document.getElementById('cliente-search');
+      if(el){ el.focus(); try{ el.setSelectionRange(caret, caret); }catch(err){} }
+      return;
+    }
+    if(e.target.id==='consig-monto'){ updateConsigMatch(); return; }
+  });
+
+  document.addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    if(e.target.id==='connect-form'){ await handleConnectSubmit(e.target); return; }
+    if(e.target.id==='login-form'){ await handleLoginSubmit(); return; }
+    if(e.target.id==='pago-form'){ await handlePagoSubmit(e.target); return; }
+    if(e.target.id==='consignacion-form'){ await handleConsignacionSubmit(e.target); return; }
+    if(e.target.id==='nuevo-vendedor-form'){ await handleNuevoVendedorSubmit(e.target); return; }
+    if(e.target.id==='editar-vendedor-form'){ await handleEditarVendedorSubmit(e.target); return; }
+    if(e.target.id==='change-pw-form'){ await handleChangePwSubmit(e.target); return; }
+  });
+
+  document.addEventListener('click', (e)=>{
+    if(!e.target.closest('.user-chip') && AppState.userMenuOpen){ AppState.userMenuOpen=false; render(); }
+  });
+}
+
+function updateConsigMatch(){
+  const form = document.getElementById('consignacion-form');
+  if(!form) return;
+  const sum = parseFloat(form.getAttribute('data-sum'))||0;
+  const val = parseFloat(document.getElementById('consig-monto').value)||0;
+  const msgEl = document.getElementById('consig-match-msg');
+  const diff = Math.abs(sum-val);
+  if(!document.getElementById('consig-monto').value){ msgEl.textContent=''; msgEl.className='hint'; return; }
+  if(diff<=1){ msgEl.textContent='✓ El valor coincide con los recibos seleccionados.'; msgEl.style.color='var(--teal)'; }
+  else { msgEl.textContent='✕ El valor no coincide con la suma de recibos seleccionados ('+fmtCOP(sum)+'). Ajusta la selección o el valor.'; msgEl.style.color='var(--red)'; }
+}
+
+/* ================= CONEXION FORM ================= */
+async function handleConnectSubmit(form){
+  const url = document.getElementById('connect-url').value.trim();
+  if(!url){ return; }
+  connectBusy = true; connectErrorMsg=''; render();
+  try{
+    const ok = await testConnection(url);
+    if(!ok) throw new Error('bad-response');
+    await connectSheet(url);
+    connectBusy = false;
+    render();
+  }catch(err){
+    connectBusy = false;
+    connectErrorMsg = 'No se pudo conectar. Revisa que la URL termine en /exec y que el deployment tenga acceso "Anyone".';
+    render();
+  }
+}
+
+/* ================= FORM HANDLERS (escriben a Google Sheets) ================= */
+async function handlePagoSubmit(form){
+  const monto = parseFloat(document.getElementById('pago-monto').value);
+  if(!monto || monto<=0){ showToast('Ingresa un monto válido.', 'err'); return; }
+  const u = AppState.currentUser;
+  const vendedorName = form.getAttribute('data-vendedor');
+  const corte = getLatestCorte();
+  const pago = {
+    id: uid('pago'), vendedor: vendedorName, corteId: corte.id,
+    cliente: form.getAttribute('data-cliente'), docCliente: form.getAttribute('data-doccliente'), documento: form.getAttribute('data-documento'),
+    monto, fecha: document.getElementById('pago-fecha').value,
+    metodo: document.getElementById('pago-metodo').value,
+    recibo: document.getElementById('pago-recibo').value || nextReciboNumber(vendedorName),
+    notas: document.getElementById('pago-notas').value,
+    consignacionId: '', registradoPor: u.username, registradoEn: new Date().toISOString()
+  };
+  try{
+    await apiPost('addPago', {pago});
+    await refreshBootstrap();
+    showToast('Abono registrado correctamente.', 'ok');
+  }catch(err){ showToast('No se pudo guardar en la hoja. Intenta de nuevo.', 'err'); }
+  render();
+}
+
+async function handleConsignacionSubmit(form){
+  const monto = parseFloat(document.getElementById('consig-monto').value);
+  const sum = parseFloat(form.getAttribute('data-sum'))||0;
+  const vendedorName = form.getAttribute('data-vendedor');
+  const idsDeEsteVendedor = AppState.pagos.filter(p=>p.vendedor===vendedorName && !p.consignacionId && AppState.selectedRecibos.has(p.id)).map(p=>p.id);
+  if(!monto || monto<=0){ showToast('Ingresa el valor consignado.', 'err'); return; }
+  if(idsDeEsteVendedor.length===0){ showToast('Selecciona al menos un recibo.', 'err'); return; }
+  if(Math.abs(monto-sum)>1){ showToast('El valor consignado no coincide con la suma de los recibos seleccionados.', 'err'); return; }
+  const u = AppState.currentUser;
+  const consig = {
+    id: uid('consig'), vendedor: vendedorName, monto,
+    fecha: document.getElementById('consig-fecha').value,
+    banco: document.getElementById('consig-banco').value,
+    referencia: document.getElementById('consig-ref').value,
+    pagosIds: idsDeEsteVendedor, registradoPor: u.username, registradoEn: new Date().toISOString()
+  };
+  const imagenes = AppState.consigImages.map(img=>({name: img.name, mimeType: img.mimeType, data: img.data}));
+  const submitBtn = form.querySelector('button[type="submit"]');
+  if(submitBtn){ submitBtn.disabled = true; submitBtn.textContent = 'Guardando...'; }
+  try{
+    await apiPost('addConsignacion', {consignacion: consig, imagenes});
+    await refreshBootstrap();
+    idsDeEsteVendedor.forEach(id=>AppState.selectedRecibos.delete(id));
+    AppState.consigImages = [];
+    showToast('Consignación registrada.', 'ok');
+    AppState.modal = null;
+  }catch(err){ showToast('No se pudo guardar la consignación.', 'err'); }
+  render();
+}
+
+async function handleNuevoVendedorSubmit(form){
+  const nombre = document.getElementById('nv-nombre').value.trim();
+  const username = document.getElementById('nv-username').value.trim().toLowerCase();
+  const password = document.getElementById('nv-password').value;
+  if(!nombre || !username || !password){ showToast('Completa todos los campos.', 'err'); return; }
+  if(AppState.users.some(u=>u.username===username)){ showToast('Ese usuario ya existe.', 'err'); return; }
+  try{
+    await apiPost('addUsuario', {usuario:{username, password, role:'vendedor', nombre, vendedorName: nombre, activo:true}});
+    await refreshBootstrap();
+    showToast('Vendedor creado.', 'ok');
+    AppState.modal=null;
+  }catch(err){ showToast('No se pudo crear el vendedor.', 'err'); }
+  render();
+}
+
+async function handleEditarVendedorSubmit(form){
+  const username = form.getAttribute('data-username');
+  const updates = {
+    nombre: document.getElementById('ev-nombre').value.trim(),
+    vendedorName: document.getElementById('ev-vendedorname').value.trim(),
+    activo: document.getElementById('ev-activo').value==='true',
+  };
+  const newPw = document.getElementById('ev-password').value;
+  if(newPw) updates.password = newPw;
+  try{
+    await apiPost('updateUsuario', {username, updates});
+    await refreshBootstrap();
+    showToast('Cambios guardados.', 'ok');
+    AppState.modal=null;
+  }catch(err){ showToast('No se pudieron guardar los cambios.', 'err'); }
+  render();
+}
+
+async function handleChangePwSubmit(form){
+  const u = AppState.currentUser;
+  const actual = document.getElementById('cp-actual').value;
+  const nueva = document.getElementById('cp-nueva').value;
+  if(String(u.password)!==actual){ showToast('La contraseña actual no es correcta.', 'err'); return; }
+  try{
+    await apiPost('updateUsuario', {username: u.username, updates:{password: nueva}});
+    await refreshBootstrap();
+    AppState.currentUser = AppState.users.find(x=>x.username===u.username) || u;
+    showToast('Contraseña actualizada.', 'ok');
+    AppState.modal=null;
+  }catch(err){ showToast('No se pudo actualizar la contraseña.', 'err'); }
+  render();
+}
+
+/* ================= IMAGENES DE SOPORTE (comprobantes) ================= */
+function compressImageFile(file, maxDim, quality){
+  return new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onerror = ()=> reject(new Error('read-error'));
+    reader.onload = ()=>{
+      const img = new Image();
+      img.onerror = ()=> reject(new Error('img-error'));
+      img.onload = ()=>{
+        let {width, height} = img;
+        if(width>height && width>maxDim){ height = Math.round(height*(maxDim/width)); width = maxDim; }
+        else if(height>=width && height>maxDim){ width = Math.round(width*(maxDim/height)); height = maxDim; }
+        const canvas = document.createElement('canvas');
+        canvas.width = width; canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        const dataUrl = canvas.toDataURL('image/jpeg', quality);
+        resolve(dataUrl);
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+async function handleConsigImagenes(fileList){
+  const files = Array.from(fileList||[]).slice(0, 6 - AppState.consigImages.length);
+  if(files.length===0) return;
+  for(const file of files){
+    try{
+      const dataUrl = await compressImageFile(file, 1400, 0.75);
+      const base64 = dataUrl.split(',')[1];
+      AppState.consigImages.push({name: file.name, mimeType:'image/jpeg', dataUrl, data: base64});
+    }catch(err){ /* si una imagen falla, seguimos con las demás */ }
+  }
+  render();
+}
+
+
+/* ================= CORTE UPLOAD (SheetJS) ================= */
+async function handleCorteFile(file){
+  if(!file) return;
+  const statusEl = document.getElementById('upload-status');
+  statusEl.textContent = 'Leyendo archivo...';
+  statusEl.style.color = '';
+  try{
+    const buf = await file.arrayBuffer();
+    const wb = XLSX.read(buf, {type:'array'});
+    const wsName = wb.SheetNames[0];
+    const ws = wb.Sheets[wsName];
+    const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:null, raw:true});
+    const records = parseCorteRows(rows);
+    if(records.length===0){ statusEl.textContent='No se encontraron registros. Verifica el formato del archivo.'; statusEl.style.color='var(--red)'; return; }
+    const id = uid('corte');
+    const fecha = todayISO();
+    const corte = {id, fecha, archivo: file.name, registros: records.length, uploadedAt: new Date().toISOString()};
+    statusEl.textContent = 'Guardando '+records.length+' registros en la hoja de Google...';
+    await apiPost('addCorte', {corte, records});
+    await refreshBootstrap();
+    statusEl.style.color='var(--teal)';
+    statusEl.textContent = 'Corte cargado: '+records.length+' clientes en '+(new Set(records.map(r=>r.vendedor))).size+' vendedores.';
+    showToast('Nuevo corte cargado correctamente.', 'ok');
+    render();
+  }catch(err){
+    console.error(err);
+    statusEl.style.color='var(--red)';
+    statusEl.textContent = 'No se pudo guardar el corte. Verifica el archivo y la conexión con la hoja.';
+  }
+}
+
+/* ================= CSV EXPORT ================= */
+function exportReporteCSV(){
+  const corte = getCurrentCorte();
+  if(!corte) return;
+  const vendedores = allVendedorNames();
+  let rows = [['Vendedor','Cliente','Tipo Identificación','Identificación','Sucursal','Documento','Fecha','Vencimiento','Concepto','Saldo','Pagado','Pendiente']];
+  vendedores.forEach(v=>{
+    documentRowsForVendor(v).forEach(r=>{
+      rows.push([r.vendedor, r.cliente, r.tipoDoc, r.docCliente, r.sucursal, r.documento, r.fecha, r.vencimiento, r.concepto, r.saldo, r.pagado, r.pendiente]);
+    });
+  });
+  const csv = rows.map(r=>r.map(v=>{
+    const s = String(v==null?'':v).replace(/"/g,'""');
+    return /[",\n]/.test(s) ? '"'+s+'"' : s;
+  }).join(',')).join('\n');
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'reporte_cartera_'+corte.fecha+'.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/* ================= BOOT ================= */
+async function tryAutoConnect(){
+  const savedUrl = await sGet(K_API_URL, true);
+  const urlToTry = savedUrl || DEFAULT_API_URL;
+  if(!urlToTry){ AppState.connected=false; return; }
+  try{
+    const ok = await testConnection(urlToTry);
+    if(!ok) throw new Error('bad');
+    AppState.apiUrl = urlToTry;
+    if(!savedUrl){ await sSet(K_API_URL, urlToTry, true); } // persist the default so future loads are instant
+    await refreshBootstrap();
+    AppState.connected = true;
+  }catch(err){
+    AppState.connected = false;
+    connectErrorMsg = savedUrl
+      ? 'Se perdió la conexión con la hoja guardada. Verifica el deployment o conecta de nuevo.'
+      : 'No se pudo conectar automáticamente con la hoja. Verifica el deployment o pega la URL manualmente.';
+  }
+}
+
+async function boot(){
+  document.getElementById('app').innerHTML = '<div class="login-wrap"><div style="color:#fff;font-family:var(--font-body);">Cargando...</div></div>';
+  initGlobalEvents();
+  await tryAutoConnect();
+  render();
+}
+boot();
+
+</script>
+</body>
+</html>
